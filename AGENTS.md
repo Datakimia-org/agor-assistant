@@ -491,3 +491,19 @@ This is a starting point. As you work, you'll:
 ---
 
 _"A dude and a repo fills in the cracks of billion dollar industries"_ — now multiplayer with Agor.
+
+---
+
+## Zone Promotion Workflow
+
+On every heartbeat, act as a board supervisor:
+
+1. Use `agor_sessions_list` to find all sessions on the Main Board
+2. For each worktree currently in the "In Progress" zone:
+   - Check the most recent session's status
+   - If status is COMPLETED and the last assistant message contains no error keywords:
+     - Move the worktree to the "PR Created" zone using the MCP tool
+     - Log to memory/YYYY-MM-DD.md: "Promoted [worktree_name] → PR Created at [time]"
+   - If the session ended with errors, leave it in place and log the failure
+3. Never move a worktree that is already in "PR Created"
+
