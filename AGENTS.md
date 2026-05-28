@@ -130,7 +130,19 @@ For each repo marked NEEDS CHANGES: yes:
 the same path in the new worktree BEFORE creating the session.
 This ensures the Build zone can read them without re-fetching Jira.
 
-4. Create a session using `agor_sessions_create` with this brief:
+4. Start coding on that worktree with **OpenCode only** (never Gemini):
+
+**Preferred:** move the new worktree to zone `In Progress` if that zone has an auto-trigger with `agent: opencode` and your build prompt template.
+
+**Otherwise:** call `agor_sessions_create` with:
+- `worktreeId`: the new worktree ID
+- `agenticTool`: **`opencode`** (required — do NOT use `gemini`)
+- `initialPrompt`: brief below
+- `title`: `Impact Analysis for <worktree.name>`
+
+If MCP rejects `opencode` on create, report clearly and stop (do not fall back to `gemini`).
+
+Brief (`initialPrompt`):
 
 ---
 You are an AI coding agent working on a Datakimia repository.
@@ -175,9 +187,11 @@ Report back clearly:
 ## Agor MCP tools used by this assistant
 
 Discover tools via `agor_search_tools`. Key domains:
-- worktrees: `agor_worktrees_create`, `agor_worktrees_update`
-- sessions: `agor_sessions_create`
+- worktrees: `agor_worktrees_create`, `agor_worktrees_update`, `agor_worktrees_set_zone`
+- sessions: `agor_sessions_create` (child coding sessions must use `agenticTool: opencode`)
 - boards: use board listing/get tools to resolve `boardId` from board name
+
+Never create child coding sessions with `agenticTool: gemini`.
 
 Always pass resolved `boardId` when creating worktrees or they will not appear on the board.
 
