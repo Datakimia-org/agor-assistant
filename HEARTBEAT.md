@@ -1,123 +1,57 @@
 # HEARTBEAT.md
 
-Keep this file empty (or with only comments) to skip heartbeat checks.
-
-Add tasks below when you want periodic checks on Agor resources.
+Runs on schedule (every 5 minutes recommended).
+This is the main activation loop of the Impact Analyzer.
 
 ---
 
-## Agor Resource Checks
+## Step 1 — Boot
 
-**Scope: Main board only** - Only check resources on YOUR main board (from `IDENTITY.md`). Don't check other users' boards unless explicitly asked.
+Read `BOOT.md` and follow its checklist before doing anything else.
 
-### Board & Zone Analysis
+---
 
-**Read `BOARD.md` first** to understand zone meanings and workflow states.
+## Step 2 — Scan the board for pending work
 
-Zone information is now **directly available** in worktree responses (no position calculations needed):
+Use `agor_search_tools` to discover board/worktree query tools, then:
+
+List all worktrees currently in the "Impact Analysis" zone on the board.
+
+Use the boardId from `BOARD.md`.
+
+For each worktree found in that zone:
+- Check `memory/` to see if this worktree name was already processed
+- If already processed → skip silently
+- If NOT processed → run the full impact analysis (Step 3)
+
+---
+
+## Step 3 — Run impact analysis for each pending worktree
+
+For each unprocessed worktree found in the zone, execute the full
+analysis defined in `AGENTS.md`, passing the worktree name and repo.
+
+---
+
+## Step 4 — If no pending worktrees
+
+Log in today's daily memory: "Heartbeat — no pending worktrees in Impact Analysis zone."
+Do nothing else. Keep the session short.
+
+---
+
+## Step 5 — Update memory
+
+After processing each worktree, append to `memory/YYYY-MM-DD.md`:
 
 ```
-Get your main board ID from IDENTITY.md, then:
-
-1. List all worktrees (use agor_worktrees_list)
-   - Each worktree includes: zone_id, zone_label, board_id
-
-2. Filter to your board (check board_id === MAIN_BOARD_ID)
-
-3. Check zone_label for each worktree:
-   - "Done: PR merged or worktree abandoned" → Mark completed, archive
-   - "Open a PR" + no pull_request_url → Create PR
-   - "In Progress" + stale last_updated → Flag as stale
-   - "Design!" → Still planning, don't expect code yet
+[HH:MM] Processed: <worktree-name>
+  - fe: <yes/no> — <reason>
+  - be: <yes/no> — <reason>
+  - bi: <yes/no> — <reason>
+  - worktrees created: <list>
+  - sessions created: <list>
 ```
 
-**Key insight:** Zones encode workflow state. Trust `zone_label` as source of truth.
-
-### Active Worktrees (on main board)
-- Check for stale worktrees (no activity in >7 days)
-- Identify worktrees with failed CI/CD
-- Look for completed work that can be cleaned up
-- Verify worktrees are in appropriate zones
-- Detect mismatches (e.g., completed work in "In Progress" zone)
-
-**When worktree has pull_request_url:**
-- Use `gh pr view <url>` to check PR state (if gh CLI available)
-- Consider PR status + zone + recent session activity:
-  - PR approved + zone="In Progress" → May need merging
-  - PR has requested changes + zone="Ready for PR" → Move to "In Progress", address feedback
-  - PR merged + any zone → Move to "Done" zone, mark completed
-  - PR has recent comments + session idle → May need agent attention
-- Review recent PR comments for actionable feedback
-- Check CI/CD status (failing checks may need fixes)
-
-### Running Sessions (on main board)
-- Check for blocked/stuck sessions
-- Review failed tasks needing attention
-- Identify sessions waiting for callbacks
-- Track session genealogy for complex workflows
-
-### Board Organization
-- Review zone usage and organization
-- Move completed worktrees to appropriate zones
-- Update worktree notes/metadata if stale
-- Use `worktrees.set_zone` to organize work
-
----
-
-## Memory Maintenance
-
-### Periodic Tasks
-- Review recent daily logs (`memory/YYYY-MM-DD.md`)
-- Update `MEMORY.md` with significant learnings
-- Sync `memory/agor-state/` with current Agor state
-- Commit workspace changes if modified
-
----
-
-## Available MCP Tools
-
-Use these Agor MCP tools for heartbeat checks:
-
-**Board and zone information:**
-- `agor_boards_get` - Get board with zones (requires: boardId)
-- Returns board.objects array with zone definitions
-
-**Worktree operations:**
-- `agor_worktrees_list` - List all worktrees (zone_id and zone_label included automatically)
-- `agor_worktrees_get` - Get specific worktree with zone info (requires: worktreeId)
-- `agor_worktrees_set_zone` - Move worktree to zone (requires: worktreeId, zoneId)
-- `agor_worktrees_update` - Update metadata (requires: worktreeId, optional: notes, issueUrl, etc.)
-
-**Session operations:**
-- `agor_sessions_list` - List sessions (optional: boardId filter)
-- `agor_sessions_get_current` - Get your current session info
-
-**GitHub integration (when available):**
-- `gh pr view <url>` - View PR details, status, and recent comments
-- `gh pr checks <url>` - Check CI/CD status
-- `gh pr view <url> --json comments` - Get recent PR comments
-- Useful when worktree has pull_request_url field
-
----
-
-## Example Heartbeat Tasks
-
-```markdown
-## Daily Checks (if enabled)
-
-- [ ] Sync Agor state: refresh worktrees.json and sessions.json
-- [ ] Review yesterday's log, extract learnings to MEMORY.md
-- [ ] Check for stuck/failed sessions on main board
-- [ ] Commit workspace changes if any
-
-## Weekly Checks (if enabled)
-
-- [ ] Review all active worktrees, identify cleanup candidates
-- [ ] Archive old daily logs (keep last 30 days)
-- [ ] Review MEMORY.md, remove outdated information
-- [ ] Update skills based on learnings
-```
-
----
-
-**Note:** Heartbeats are optional. Many agents work better in reactive mode (human-initiated). Use heartbeats if you need proactive monitoring of Agor resources.
+This is the deduplication mechanism — a worktree in this log will not be
+processed again in future heartbeats.
