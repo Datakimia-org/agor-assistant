@@ -46,6 +46,6 @@ After processing each worktree, append to `memory/YYYY-MM-DD.md`:
 `  - be: <yes/no> - <reason>`
 `  - bi: <yes/no> - <reason>`
 `  - worktrees created: <list>`
-`  - sessions created: <list>`
+`  - moved to In Progress: <worktree-id> → session <id> (from zone trigger) or <error>`
 
 Any worktree already logged as `Processed` must not be processed again in future heartbeats.
