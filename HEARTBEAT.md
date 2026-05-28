@@ -5,32 +5,34 @@ Runs on schedule (every 5 minutes recommended). This is the main activation loop
 ## Step 1 — Boot
 Read `BOOT.md` and follow its checklist before doing anything else.
 
-## Step 2 — Resolve board and zone (do not ask user unless hard failure)
-Use `agor_search_tools` to discover board/worktree query tools, then resolve IDs in this order:
+## Step 2 — Resolve board and zone automatically (no user questions)
+Use `agor_search_tools` to discover board/worktree tools, then:
 
-1. Read `BOARD.md` and try to get:
-   - `boardId`
-   - zone ID or exact zone label for **Impact Analysis**
-2. If missing, call board-list tools (for example `agor_boards_list`) and auto-select the user's main board.
-3. If zone ID is missing, fetch board zones and resolve by label **Impact Analysis**.
-4. Only ask the user if board/zone still cannot be resolved after tool lookup.
+1. Read `BOARD.md`.
+2. Resolve board by name, not by fixed ID:
+   - Primary name: `Product Portal — Main Board`
+   - Fallback name: `Main Board`
+3. Use board listing tools (for example `agor_boards_list`) to find the board and extract `boardId`.
+4. Resolve zone by exact label `Impact Analysis` on that board.
+5. If multiple matches exist, choose the most recently updated board.
+6. Ask the user only if no matching board exists.
 
 ## Step 3 — Scan pending work in Impact Analysis
-List all worktrees currently in the **Impact Analysis** zone (using resolved `boardId` + zone).
+List all worktrees in the `Impact Analysis` zone using resolved `boardId`.
 
-For each worktree found in that zone:
-- Check `memory/` to see if this worktree name was already processed.
-- If already processed -> skip silently.
-- If NOT processed -> run full impact analysis (Step 4).
+For each worktree found:
+- Check `memory/YYYY-MM-DD.md` (and recent logs) for `Processed: <worktree-name>`.
+- If already processed, skip silently.
+- If not processed, run full impact analysis (Step 4).
 
 ## Step 4 — Run impact analysis
-For each unprocessed worktree, execute the full analysis defined in `AGENTS.md`, passing:
+For each unprocessed worktree, execute the analysis defined in `AGENTS.md`, passing:
 - worktree name
 - repo
 
 ## Step 5 — If no pending worktrees
 Append to today's memory file:
-`Heartbeat — no pending worktrees in Impact Analysis zone.`
+`[HH:MM] Heartbeat — no pending worktrees in Impact Analysis zone.`
 
 Do nothing else. Keep the session short.
 
