@@ -127,41 +127,26 @@ For each repo marked NEEDS CHANGES: yes:
 - issueUrl: (from `ticket.md` if present)
 
 3. Copy ALL files from the ticket's `.agor-docs/{{ worktree.name }}/` into
-the same path in the new worktree BEFORE creating the session.
-This ensures the Build zone can read them without re-fetching Jira.
+   the same path in the new worktree BEFORE moving zones.
+   The In Progress zone trigger prompt must be able to read them.
 
-4. Start coding on that worktree with **OpenCode only** (never Gemini):
+4. Start coding via **In Progress zone** (required — do NOT use `agor_sessions_create`):
 
-**Preferred:** move the new worktree to zone `In Progress` if that zone has an auto-trigger with `agent: opencode` and your build prompt template.
+   a. Load the board (`agor_boards_get` or list) and find the zone object whose label is exactly `In Progress`. Note its `zoneId` (object key on the board).
 
-**Otherwise:** call `agor_sessions_create` with:
-- `worktreeId`: the new worktree ID
-- `agenticTool`: **`opencode`** (required — do NOT use `gemini`)
-- `initialPrompt`: brief below
-- `title`: `Impact Analysis for <worktree.name>`
+   b. Call `agor_worktrees_set_zone` with:
+   - `worktreeId`: the new worktree ID
+   - `zoneId`: the In Progress zone ID
 
-If MCP rejects `opencode` on create, report clearly and stop (do not fall back to `gemini`).
+   If the zone is configured with `behavior: always_new`, a template, and `agent: opencode` (see `BOARD.md`), Agor will:
+   - create a new OpenCode session on that worktree
+   - render and send the zone prompt template automatically
 
-Brief (`initialPrompt`):
+   c. Read the tool response: log `promptResult.sessionId` and `promptResult.taskId` when present.
 
----
-You are an AI coding agent working on a Datakimia repository.
+   d. If the response says `show_picker`, empty template, or no trigger — stop and report (board misconfiguration). Do not fall back to `gemini` or `agor_sessions_create`.
 
-## Load context (MANDATORY)
-Read ALL files from:
-`.agor-docs/{{ worktree.name }}/*`
-
-## Your task
-Implement the changes described in `.agor-docs/{{ worktree.name }}/ticket.md`,
-scoped to this repository only.
-
-Scope for this repo:
-`<insert repo-specific scoped change list>`
-
-Follow the Build zone instructions once you begin coding.
----
-
-5. Log the created worktree ID and session ID in today's daily memory log.
+5. Log worktree ID, zone move, and auto-created session ID in today's memory log.
 
 ### Step 6 — Final report
 
@@ -170,7 +155,7 @@ Report back clearly:
 - Architecture doc found: yes/no
 - For each repo: decision + reason
 - Worktrees created: repo + branch + worktree ID
-- Sessions created: session ID + scope summary
+- Moved to In Progress: yes/no + zone trigger session/task IDs if returned
 - Repos skipped + reason
 - Confirmation that `.agor-docs` files were copied to each new worktree
 
@@ -187,11 +172,10 @@ Report back clearly:
 ## Agor MCP tools used by this assistant
 
 Discover tools via `agor_search_tools`. Key domains:
-- worktrees: `agor_worktrees_create`, `agor_worktrees_update`, `agor_worktrees_set_zone`
-- sessions: `agor_sessions_create` (child coding sessions must use `agenticTool: opencode`)
-- boards: use board listing/get tools to resolve `boardId` from board name
+- worktrees: `agor_worktrees_create`, `agor_worktrees_update`, `agor_worktrees_set_zone` (starts OpenCode via In Progress trigger)
+- boards: `agor_boards_list`, `agor_boards_get` — resolve `boardId` and In Progress `zoneId`
 
-Never create child coding sessions with `agenticTool: gemini`.
+Do not use `agor_sessions_create` for child coding work. Do not use `agenticTool: gemini`.
 
 Always pass resolved `boardId` when creating worktrees or they will not appear on the board.
 
