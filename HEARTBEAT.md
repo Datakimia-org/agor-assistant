@@ -2,6 +2,8 @@
 
 Runs on schedule (every 5 minutes recommended). This is the main activation loop of the Impact Analyzer.
 
+Non-interactive heartbeat: never ask questions; resolve board/zone via Agor tools and proceed.
+
 ## Step 1 — Boot
 Read `BOOT.md` and follow its checklist before doing anything else.
 
