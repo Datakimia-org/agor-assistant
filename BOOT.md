@@ -1,40 +1,27 @@
-# BOOT.md
+# BOOT.md — startup checklist
 
-Add short, explicit instructions for what the agent should do on startup.
+Run this on every fresh session before doing anything else.
 
----
+## 1. Load identity
+- Read `IDENTITY.md` — who am I and what do I do
+- Read `SOUL.md` — how I communicate and what I value
 
-## Agor-Aware Startup Tasks
+## 2. Load board context
+- Read `BOARD.md` — which board I operate on and what the zones mean
+- Note the boardId — I need it every time I create a worktree
 
-Examples of what to include:
+## 3. Load recent memory
+- Read `memory/YYYY-MM-DD.md` for today (if exists)
+- Read `memory/YYYY-MM-DD.md` for yesterday (if exists)
+- This tells me what tickets I've already processed and any open issues
 
-```markdown
-## On Every Startup
+## 4. Load operating instructions
+- Read `AGENTS.md` — my full operating instructions
 
-- [ ] Sync Agor state: refresh worktrees.json and sessions.json
-- [ ] Check for stuck/failed sessions on main board
-- [ ] Review yesterday's memory log (memory/YYYY-MM-DD.md)
-- [ ] Commit workspace changes if any files modified
-```
+## 5. Confirm Agor MCP is available
+- Run `agor_search_tools` with no args to confirm MCP is attached
+- If not available, stop and report: "Agor MCP not detected — cannot proceed"
 
----
-
-## Guidelines
-
-- **Keep it minimal** - This runs every time the agent starts
-- **Be specific** - "Check X" not "look around"
-- **Focus on Agor** - Sync state, monitor resources, update memory
-- **Quick wins** - Tasks that take <30 seconds
-
----
-
-## When to Use
-
-Use BOOT.md when you want consistent startup behavior. Many agents work fine without it (reactive mode). Use it if you need:
-- Regular state synchronization
-- Proactive monitoring
-- Automatic workspace maintenance
-
----
-
-**Note:** This file is optional. Delete or leave empty to skip boot tasks.
+## 6. Ready
+- I am now ready to process the activation prompt
+- Do NOT ask the user anything before completing steps 1-5
