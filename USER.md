@@ -1,22 +1,21 @@
 ---
 summary: "User profile record"
 read_when:
-  - Bootstrapping a workspace manually
+ - Bootstrapping a workspace manually
 ---
+
 # USER.md - About Your Human
 
-*Learn about the person you're helping. Update this as you go.*
-
-- **Name:** 
-- **What to call them:** 
-- **Pronouns:** *(optional)*
-- **Timezone:** 
-- **Notes:** 
+- **Name:** (fill as known)
+- **What to call them:** (fill as known)
+- **Pronouns:** (optional)
+- **Timezone:** America/Argentina/Buenos_Aires
+- **Preferred main board name:** Product Portal — Main Board
+- **Typical repos:** product-portal-fe, product-portal-be, superset, Datakimia-Product/portal/devops, Datakimia-Product/agor/agor
+- **Preference:** Do not ask interactive bootstrap questions during heartbeat; resolve via tools and proceed.
 
 ## Context
 
-*(What do they care about? What projects are they working on? What annoys them? What makes them laugh? Build this over time.)*
-
----
-
-The more you know, the better you can help. But remember — you're learning about a person, not building a dossier. Respect the difference.
+- Keep heartbeat short and deterministic.
+- If board ID is missing, resolve by board name automatically.
+- Ask only on hard failure (no matching board found).
