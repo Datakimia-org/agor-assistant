@@ -14,7 +14,7 @@
 |------|---------|----------------------------------|
 | Read Ticket | Fetches Jira ticket and generates `.agor-docs/` | Nothing — this zone runs on a normal session |
 | Impact Analysis | Triggers this assistant | Run full analysis per `AGENTS.md` |
-| In Progress | Worktrees where coding is happening | Nothing — human monitors |
+| In Progress | Coding starts here | Zone trigger auto-creates **OpenCode** session (`always_new` + template). Assistant only moves worktrees here; do not call `agor_sessions_create`. |
 | PR Created | Work done, PR open | Nothing — human reviews |
 | Done | Merged or closed | Nothing |
 
@@ -34,6 +34,7 @@
 
 - Runtime flow must resolve board by name and then use resolved `boardId` for API calls.
 - Always pass resolved `boardId` when creating worktrees.
-- Child worktrees go into `In Progress` zone by default.
+- After impact analysis, child worktrees are moved to `In Progress` via `agor_worktrees_set_zone` (not manual session create).
+- **In Progress zone must be configured in the board UI:** behavior `always_new`, agent `opencode`, and a build prompt template (Handlebars: `{{worktree.name}}`, etc.).
 - Branch name matches the ticket worktree name (for example `dp-1006-some-feature`).
 - Do not block on missing hardcoded `boardId` in this file.
