@@ -18,6 +18,28 @@ The worktree name is passed to you by the heartbeat loop.
 
 ---
 
+## Heartbeat Non-Interactive Mode (Mandatory)
+
+When running from `HEARTBEAT.md`, operate in non-interactive mode:
+
+- Do not use question tools.
+- Do not ask the user for board ID, board name, or repo list.
+- Resolve board by name automatically:
+  1. try exact `Product Portal — Main Board`
+  2. fallback `Main Board`
+  3. if multiple matches, pick most recently updated
+- Resolve `boardId` from tool responses and continue.
+- Resolve `Impact Analysis` zone by label and continue.
+- Ask the user only on hard failure:
+  - no matching board exists, or
+  - required Agor tools are unavailable after retry.
+
+Heartbeat completion rule:
+- must end with either `processed N worktrees` or `no pending worktrees`
+- must not remain waiting for hidden prompts/questions
+
+---
+
 ## On every activation: run the analysis
 
 ### Step 1 — Load ticket context
@@ -25,11 +47,11 @@ The worktree name is passed to you by the heartbeat loop.
 The previous zone (Read Ticket) has already written context files into the ticket worktree.
 Read ALL files from the ticket worktree at:
 
-  <ticket-worktree-path>/.agor-docs/{{ worktree.name }}/
+`/.agor-docs/{{ worktree.name }}/`
 
 This path is on the shared filesystem. If the ticket worktree is at
-`~/.agor/worktrees/<repo>/<worktree-name>`, the docs are at:
-`~/.agor/worktrees/<repo>/<worktree-name>/.agor-docs/<worktree-name>/`
+`~/.agor/worktrees/<ticket-worktree>/`, the docs are at:
+`~/.agor/worktrees/<ticket-worktree>/.agor-docs/{{ worktree.name }}/`
 
 Files to read:
 - `ticket.md` — title, user need, requested change, success criteria, scope
@@ -43,7 +65,7 @@ This is the single source of truth. Do NOT re-read Jira.
 
 Read from the ticket's source repo:
 
-  context-docs/00_general-architecture.md
+`context-docs/00_general-architecture.md`
 
 Use it to understand which layers and contracts are involved in this change.
 
@@ -57,7 +79,7 @@ Check against ticket scope:
 - Auth flow, NextAuth providers, session handling
 - CASL roles, permissions, feature flags
 - Superset embedding: guest token, bi_tool claim, embedded endpoints
-- /api/runtime-config, middleware redirects
+- `/api/runtime-config`, middleware redirects
 
 **product-portal-be** (NestJS)
 Check against ticket scope:
@@ -77,7 +99,7 @@ Check against ticket scope:
 
 For EACH repo, write a structured block:
 
-```
+```text
 REPO: product-portal-fe
 NEEDS CHANGES: yes | no
 REASON: <grounded in ticket.md scope and architecture doc>
@@ -93,35 +115,38 @@ Never skip a repo silently — always produce the block with NEEDS CHANGES: no a
 
 For each repo marked NEEDS CHANGES: yes:
 
-1. Get the board ID from `BOARD.md`
+1. Resolve board by name from `BOARD.md`:
+   - primary `Product Portal — Main Board`
+   - fallback `Main Board`
+   Then retrieve `boardId` via board tools.
 
 2. Create a new worktree using `agor_worktrees_create`:
-   - repo: the affected repo name
-   - branch: {{ worktree.name }}
-   - boardId: (from BOARD.md)
-   - issueUrl: (from ticket.md if present)
+- repo: the affected repo name
+- branch: `{{ worktree.name }}`
+- boardId: resolved at runtime
+- issueUrl: (from `ticket.md` if present)
 
 3. Copy ALL files from the ticket's `.agor-docs/{{ worktree.name }}/` into
-   the same path in the new worktree BEFORE creating the session.
-   This ensures the Build zone can read them without re-fetching Jira.
+the same path in the new worktree BEFORE creating the session.
+This ensures the Build zone can read them without re-fetching Jira.
 
 4. Create a session using `agor_sessions_create` with this brief:
 
 ---
-   You are an AI coding agent working on a Datakimia repository.
+You are an AI coding agent working on a Datakimia repository.
 
-   ## Load context (MANDATORY)
-   Read ALL files from:
-     .agor-docs/{{ worktree.name }}/*
+## Load context (MANDATORY)
+Read ALL files from:
+`.agor-docs/{{ worktree.name }}/*`
 
-   ## Your task
-   Implement the changes described in .agor-docs/{{ worktree.name }}/ticket.md,
-   scoped to this repository only.
+## Your task
+Implement the changes described in `.agor-docs/{{ worktree.name }}/ticket.md`,
+scoped to this repository only.
 
-   Scope for this repo:
-   <paste CHANGES NEEDED list from decision block>
+Scope for this repo:
+`<insert repo-specific scoped change list>`
 
-   Follow the Build zone instructions once you begin coding.
+Follow the Build zone instructions once you begin coding.
 ---
 
 5. Log the created worktree ID and session ID in today's daily memory log.
@@ -129,21 +154,21 @@ For each repo marked NEEDS CHANGES: yes:
 ### Step 6 — Final report
 
 Report back clearly:
-- Ticket title and scope read from ticket.md
+- Ticket title and scope read from `ticket.md`
 - Architecture doc found: yes/no
 - For each repo: decision + reason
 - Worktrees created: repo + branch + worktree ID
 - Sessions created: session ID + scope summary
 - Repos skipped + reason
-- Confirmation that .agor-docs files were copied to each new worktree
+- Confirmation that `.agor-docs` files were copied to each new worktree
 
 ---
 
 ## If something is missing
 
-- `.agor-docs/` not found → report clearly, do NOT proceed, ask the user to confirm the worktree path
-- `context-docs/00_general-architecture.md` not found → proceed with ticket.md only, note the gap in the report
-- `agor_worktrees_create` fails → report the error, do NOT retry silently
+- `.agor-docs/` not found -> report clearly, do NOT proceed, ask the user to confirm the worktree path
+- `context-docs/00_general-architecture.md` not found -> proceed with `ticket.md` only, note the gap in the report
+- `agor_worktrees_create` fails -> report the error, do NOT retry silently
 
 ---
 
@@ -152,9 +177,9 @@ Report back clearly:
 Discover tools via `agor_search_tools`. Key domains:
 - worktrees: `agor_worktrees_create`, `agor_worktrees_update`
 - sessions: `agor_sessions_create`
-- boards: to get boardId if not in BOARD.md
+- boards: use board listing/get tools to resolve `boardId` from board name
 
-Always pass `boardId` when creating worktrees or they will not appear on the board.
+Always pass resolved `boardId` when creating worktrees or they will not appear on the board.
 
 ---
 
